@@ -6,43 +6,93 @@
 <script>
 
 function checkRunningActivity() {
-	jQuery.getJSON("RunningActivity.json", function (data) {
-		if ("ActivityId" in data) {
+	$.getJSON("/GetRunningActivity", function (data) {
+		if (!("ActivityId" in data)) {
+			// Something goes wrong with the server...
+			console.log(data);
+			return;
+		}
+		if (data.ActivityId > 0) {
+			console.log(data);
 			// There is a running activity...
-			jQuery("#runningActivityCont").html(
+			$("#runningActivityCont").html(
 				'<div class="jumbotron">' +
 					'<h1>' + data.Name + '<br><small>' + data.Description + '</small></h1>' +
 					'<p><a class="btn btn-primary btn-lg" href="#" role="button">Stop activity</a></p>' +
 				'</div>'
 			);
 		} else {
-			jQuery("#runningActivityCont").html(
+			$("#runningActivityCont").html(
 				'<div class="jumbotron">' +
 					'<h1>No activity is running...</h1>' +
 					'<p>You can start one right now!</p>' +
-					'<p><a class="btn btn-primary btn-lg" href="#" role="button">Start activity</a></p>' +
+					'<form id="startActivityForm" class="form-horizontal">' +
+						'<div class="form-group form-group-lg">' +
+							'<label class="col-sm-2 control-label" for="activityInput">Activity</label>' +
+							'<div class="col-sm-10">' +
+								'<input class="form-control" type="text" name="name" id="activityInput" placeholder="Enter activity description&hellip;">' +
+							'</div>' +
+						'</div>' +
+						'<div class="form-group form-group-sm">' +
+							'<label class="col-sm-2 control-label" for="projectInput">Project</label>' +
+							'<div class="col-sm-10">' +
+								'<input class="form-control" type="text" name="project" id="projectInput" placeholder="Enter project&hellip;">' +
+							'</div>' +
+						'</div>' +
+						'<div class="form-group form-group-sm">' +
+							'<label class="col-sm-2 control-label" for="tagsInput">Tags</label>' +
+							'<div class="col-sm-10">' +
+								'<input class="form-control" type="text" name="tags" id="tagsInput" placeholder="Enter comma-separated tags&hellip;">' +
+							'</div>' +
+						'</div>' +
+						'<div class="form-group form-group-sm">' +
+							'<label class="col-sm-2 control-label" for="descInput">Description</label>' +
+							'<div class="col-sm-10">' +
+								'<input class="form-control" type="text" name="description" id="descInput" placeholder="Enter additional description for the activity&hellip;">' +
+							'</div>' +
+						'</div>' +
+						'<div class="form-group col-sm-12">' +
+							'<div class="col-sm-2"> </div>' +
+							'<div class="col-sm-10">' +
+								'<button type="submit" class="btn btn-primary btn-lg">Start activity</button>' +
+							'</div>' +
+						'</div>' +
+					'</form>' +
+					'<p> <br> </p>' +
 				'</div>'
 			);
+			// Set correct focus
+			$("#activityInput").focus();
+			// Start activity form
+			$("#startActivityForm").submit(function (event) {
+				console.log("Handler for .submit() called.");
+				var activityData = $(this).serialize();
+				console.log(activityData);
+				$.getJSON("/StartActivity", function (data) {
+					console.log(data);
+				});
+				event.preventDefault();
+			});
 		}
 	});
 }
 
-jQuery(document).ready(function (e) {
+$(document).ready(function (e) {
 	// Home tab
-	jQuery('#tabBtn1 a').click(function (e) {
+	$('#tabBtn1 a').click(function (e) {
 		e.preventDefault();
 		// Check if there is a running activity
 		checkRunningActivity();
 		// Show tab
-		jQuery(this).tab('show');
+		$(this).tab('show');
 	});
 	// Tab with activities list
-	jQuery('#tabBtn2 a').click(function (e) {
+	$('#tabBtn2 a').click(function (e) {
 		e.preventDefault();
 		// Load activities JSON
-		jQuery.getJSON("Activities.json", function (data) {
+		$.getJSON("/ListActivities", function (data) {
 			var items = [];
-			jQuery.each(data, function(key, v) {
+			$.each(data, function(key, v) {
 				var cls = (v.Stopped == "") ? ' class="active"' : '';
 				items.push("<tr" + cls + ">" +
 					"<td>" + v.ActivityId + "</td>" +
@@ -51,20 +101,20 @@ jQuery(document).ready(function (e) {
 					"<td>" + v.Stopped + "</td>" +
 				"</tr>");
 			});
-			jQuery("#activitiesTable").html(items.join(""));
+			$("#activitiesTable").html(items.join(""));
 		});
 		// Show tab
-		jQuery(this).tab('show');
+		$(this).tab('show');
 	});
 	// Tab with projects and tags
-	jQuery('#tabBtn3 a').click(function (e) {
+	$('#tabBtn3 a').click(function (e) {
 		e.preventDefault();
 		// Show tab
-		jQuery(this).tab('show');
+		$(this).tab('show');
 		// Load projects JSON
-		jQuery.getJSON("Projects.json", function (data) {
+		$.getJSON("/ListProjects", function (data) {
 			var items = [];
-			jQuery.each(data, function(key, v) {
+			$.each(data, function(key, v) {
 				items.push("<tr>" +
 					"<td>" + v.ProjectId + "</td>" +
 					"<td>" + v.Name + "</td>" +
@@ -72,14 +122,15 @@ jQuery(document).ready(function (e) {
 					"<td>" + v.Created + "</td>" +
 				"</tr>");
 			});
-			jQuery("#projectsTable").html(items.join(""));
+			$("#projectsTable").html(items.join(""));
 		});
 	});
 	// Helper tab with tasks
-	jQuery('#tabBtn4 a').click(function (e) {
+	$('#tabBtn4 a').click(function (e) {
 		e.preventDefault();
-		jQuery(this).tab('show');
+		$(this).tab('show');
 	});
+
 	// Check if there is a running activity
 	checkRunningActivity();
 });

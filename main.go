@@ -41,16 +41,81 @@ type httpHandler struct{}
 func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 
-	if (r.URL.String() == "/favicon.ico") {
-		renderFavicon(w)
-	} else if (r.URL.String() == "/RunningActivity.json") {
-		renderRunningActivityJson(w)
-	} else if (r.URL.String() == "/Activities.json") {
-		renderActivitiesJson(w)
-	} else if (r.URL.String() == "/Projects.json") {
-		renderProjectsJson(w)
+	// TODO Try to use `http.HandleFunc("/images", handler)` to serve all images at once!
+	if (r.URL.String() == "/images/mstile-144x144.png") {
+		fp := path.Join("images", "mstile-144x144.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/favicon-16x16.png") {
+		fp := path.Join("images", "favicon-16x16.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/favicon-32x32.png") {
+		fp := path.Join("images", "favicon-32x32.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/favicon-96x96.png") {
+		fp := path.Join("images", "favicon-96x96.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/favicon-160x160.png") {
+		fp := path.Join("images", "favicon-160x160.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/favicon-192x192.png") {
+		fp := path.Join("images", "favicon-192x192.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/apple-touch-icon-57x57.png") {
+		fp := path.Join("images", "apple-touch-icon-57x57.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/apple-touch-icon-60x60.png") {
+		fp := path.Join("images", "apple-touch-icon-60x60.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/apple-touch-icon-72x72.png") {
+		fp := path.Join("images", "apple-touch-icon-72x72.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/apple-touch-icon-76x76.png") {
+		fp := path.Join("images", "apple-touch-icon-76x76.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/apple-touch-icon-114x114.png") {
+		fp := path.Join("images", "apple-touch-icon-114x114.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/apple-touch-icon-120x120.png") {
+		fp := path.Join("images", "apple-touch-icon-120x120.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/apple-touch-icon-144x144.png") {
+		fp := path.Join("images", "apple-touch-icon-144x144.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/apple-touch-icon-152x152.png") {
+		fp := path.Join("images", "apple-touch-icon-152x152.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/images/apple-touch-icon-180x180.png") {
+		fp := path.Join("images", "apple-touch-icon-180x180.png")
+		http.ServeFile(w, r, fp)
+	} else if (r.URL.String() == "/browserconfig.xml") {
+		log.Println("Rendering browserconfig.xml...")
+		w.Header().Set("Content-Type", "application/xml;charset=utf-8")
+		browserconfig := `<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+  <msapplication>
+    <tile>
+      <square70x70logo src="images/mstile-70x70.png"/>
+      <square150x150logo src="images/mstile-150x150.png"/>
+      <square310x310logo src="images/mstile-310x310.png"/>
+      <wide310x150logo src="images/mstile-310x150.png"/>
+      <TileColor>#e7e7e7</TileColor>
+    </tile>
+  </msapplication>
+</browserconfig>
+`
+		w.Write([]byte(browserconfig))
+	} else if (r.URL.String() == "/GetRunningActivity") {
+		getRunningActivity(w, r)
+	} else if (r.URL.String() == "/StartActivity") {
+		startActivity(w, r)
+	} else if (r.URL.String() == "/StopActivity") {
+		stopActivity(w, r)
+	} else if (r.URL.String() == "/ListActivities") {
+		listActivities(w, r)
+	} else if (r.URL.String() == "/ListProjects") {
+		listProjects(w, r)
 	} else {
-		renderMainPage(w)
+		mainPage(w, r)
 	}
 }
 
@@ -110,17 +175,49 @@ func checkError(err error) {
 	}
 }
 
+// Start activity.
+func startActivity(w http.ResponseWriter, r *http.Request) error {
+	log.Println("TODO Start activity!")
+	log.Println("got: ", r.URL.Query())
+
+	name := r.URL.Query().Get("name")
+	project := r.URL.Query().Get("project")
+	description := r.URL.Query().Get("description")
+	tags := r.URL.Query().Get("tags")
+
+	log.Println(name)
+	log.Println(project)
+	log.Println(description)
+	log.Println(tags)
+
+	// ...
+
+	return nil
+}
+
+// Stop activity.
+func stopActivity(w http.ResponseWriter, r *http.Request) error {
+	log.Println("TODO Stop activity!")
+	log.Println("got: ", r.URL.Query())
+
+	aid := r.URL.Query().Get("aid")
+
+	log.Println(aid)
+
+	// ...
+
+	return nil
+}
+
 // Render JSON with details about currently running activity.
-func renderRunningActivityJson(w http.ResponseWriter) error {
+func getRunningActivity(w http.ResponseWriter, r *http.Request) error {
 	log.Println("Rendering RunningActivity.json...")
 
 	db, err := database.InitStorage(dbPath)
 	checkError(err)
 	defer db.Close()
 
-	activity, err := database.SelectActivityRunning(db)
-	checkError(err)
-
+	activity, _ := database.SelectActivityRunning(db)
 	json, err := json.Marshal(activity)
 	checkError(err)
 
@@ -131,7 +228,7 @@ func renderRunningActivityJson(w http.ResponseWriter) error {
 }
 
 // Render JSON with activities.
-func renderActivitiesJson(w http.ResponseWriter) error {
+func listActivities(w http.ResponseWriter, r *http.Request) error {
 	log.Println("Rendering Activities.json...")
 
 	db, err := database.InitStorage(dbPath)
@@ -151,7 +248,7 @@ func renderActivitiesJson(w http.ResponseWriter) error {
 }
 
 // Render JSON with projects.
-func renderProjectsJson(w http.ResponseWriter) error {
+func listProjects(w http.ResponseWriter, r *http.Request) error {
 	log.Println("Rendering Projects.json...")
 
 	db, err := database.InitStorage(dbPath)
@@ -170,15 +267,8 @@ func renderProjectsJson(w http.ResponseWriter) error {
 	return nil
 }
 
-// Render favicon.
-func renderFavicon(w http.ResponseWriter) error {
-	log.Println("TODO Render favicon!")
-	// ...
-	return nil
-}
-
 // Render main HTML page.
-func renderMainPage(w http.ResponseWriter) error {
+func mainPage(w http.ResponseWriter, r *http.Request) error {
 	log.Println("Rendering main page...")
 
 	data := map[string]string{"Name": "odTimeTracker",}
