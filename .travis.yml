@@ -1,0 +1,11 @@
+language: go
+
+go:
+  - tip
+
+env:
+  - GOARCH=amd64
+
+install:
+  - go get github.com/mattn/go-sqlite3
+  - go get github.com/odTimeTracker/odtimetracker-go-lib
