@@ -1,0 +1,89 @@
+{{define "footer"}}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<script>
+
+function checkRunningActivity() {
+	jQuery.getJSON("RunningActivity.json", function (data) {
+		if ("ActivityId" in data) {
+			// There is a running activity...
+			jQuery("#runningActivityCont").html(
+				'<div class="jumbotron">' +
+					'<h1>' + data.Name + '<br><small>' + data.Description + '</small></h1>' +
+					'<p><a class="btn btn-primary btn-lg" href="#" role="button">Stop activity</a></p>' +
+				'</div>'
+			);
+		} else {
+			jQuery("#runningActivityCont").html(
+				'<div class="jumbotron">' +
+					'<h1>No activity is running...</h1>' +
+					'<p>You can start one right now!</p>' +
+					'<p><a class="btn btn-primary btn-lg" href="#" role="button">Start activity</a></p>' +
+				'</div>'
+			);
+		}
+	});
+}
+
+jQuery(document).ready(function (e) {
+	// Home tab
+	jQuery('#tabBtn1 a').click(function (e) {
+		e.preventDefault();
+		// Check if there is a running activity
+		checkRunningActivity();
+		// Show tab
+		jQuery(this).tab('show');
+	});
+	// Tab with activities list
+	jQuery('#tabBtn2 a').click(function (e) {
+		e.preventDefault();
+		// Load activities JSON
+		jQuery.getJSON("Activities.json", function (data) {
+			var items = [];
+			jQuery.each(data, function(key, v) {
+				var cls = (v.Stopped == "") ? ' class="active"' : '';
+				items.push("<tr" + cls + ">" +
+					"<td>" + v.ActivityId + "</td>" +
+					"<td>" + v.Name + "</td>" +
+					"<td>" + v.Started + "</td>" +
+					"<td>" + v.Stopped + "</td>" +
+				"</tr>");
+			});
+			jQuery("#activitiesTable").html(items.join(""));
+		});
+		// Show tab
+		jQuery(this).tab('show');
+	});
+	// Tab with projects and tags
+	jQuery('#tabBtn3 a').click(function (e) {
+		e.preventDefault();
+		// Show tab
+		jQuery(this).tab('show');
+		// Load projects JSON
+		jQuery.getJSON("Projects.json", function (data) {
+			var items = [];
+			jQuery.each(data, function(key, v) {
+				items.push("<tr>" +
+					"<td>" + v.ProjectId + "</td>" +
+					"<td>" + v.Name + "</td>" +
+					"<td>" + v.Description + "</td>" +
+					"<td>" + v.Created + "</td>" +
+				"</tr>");
+			});
+			jQuery("#projectsTable").html(items.join(""));
+		});
+	});
+	// Helper tab with tasks
+	jQuery('#tabBtn4 a').click(function (e) {
+		e.preventDefault();
+		jQuery(this).tab('show');
+	});
+	// Check if there is a running activity
+	checkRunningActivity();
+});
+</script>
+</body>
+</html>
+{{end}}

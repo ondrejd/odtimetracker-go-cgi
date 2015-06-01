@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+{{template "header" .}}
+<div class="container">
+	<div class="page-header">
+		<ul class="nav nav-pills pull-right">
+			<li id="tabBtn1" role="presentation" class="active"><a href="#tab1" aria-controls="tab1" role="tab" data-toggle="tab">Home</a></li>
+			<li id="tabBtn2" role="presentation"><a href="#tab2" aria-controls="tab2" role="tab" data-toggle="tab">Activities</a></li>
+			<li id="tabBtn3" role="presentation"><a href="#tab3" aria-controls="tab3" role="tab" data-toggle="tab">Organize</a></li>
+			<li id="tabBtn4" role="presentation"><a href="#tab4" aria-controls="tab4" role="tab" data-toggle="tab">TODO</a></li>
+		</ul>
+		<h1>{{.Name}}</h1>
+		<div class="clearfix"></div>
+	</div>
+	<!-- Tab panes -->
+	<div class="tab-content">
+		<div role="tabpanel" class="tab-pane active" id="tab1">
+			<div id="runningActivityCont"></div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="tab2">
+			<div class="panel">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Name</th>
+							<th>Started</th>
+							<th>Stopped</th>
+						</tr>
+					</thead>
+					<tbody id="activitiesTable">
+						<tr>
+							<td colspan="4">
+								<p><i>Chvíli strpení, data se načítají...</i></p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="tab3">
+			<div class="panel">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Name</th>
+							<th>Description</th>
+							<th>Created</th>
+						</tr>
+					</thead>
+					<tbody id="projectsTable">
+						<tr>
+							<td colspan="4">
+								<p><i>Chvíli strpení, data se načítají...</i></p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div role="tabpanel" class="tab-pane" id="tab4">
+			<div class="container-fluid">
+				<div class="row">
+					{{range .Messages}}
+					<div class="alert alert-{{.Type}}" role="alert">
+						{{ if eq .Type "danger" }}
+						<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+						{{ else if eq .Type "info" }}
+						<span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+						{{ else if eq .Type "success" }}
+						<span class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span>
+						{{end}}
+						{{.Message}}
+					</div>
+					{{end}}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{{template "footer" .}}
