@@ -1,5 +1,7 @@
 # odTimeTracker CLI Tool written in Go
 
+[![Build Status](https://travis-ci.org/ondrejd/odtimetracker-go-cgi.svg)](https://travis-ci.org/ondrejd/odtimetracker-go-cgi)
+
 Simple implementation of [odTimeTracker](https://github.com/odTimeTracker) server using [Go](https://golang.org).
 
 ## Downloading & Building
