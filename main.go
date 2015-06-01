@@ -178,12 +178,13 @@ func checkError(err error) {
 // Start activity.
 func startActivity(w http.ResponseWriter, r *http.Request) error {
 	log.Println("TODO Start activity!")
-	log.Println("got: ", r.URL.Query())
 
-	name := r.URL.Query().Get("name")
-	project := r.URL.Query().Get("project")
-	description := r.URL.Query().Get("description")
-	tags := r.URL.Query().Get("tags")
+	r.ParseForm()
+	log.Println(r.Form())
+	name := r.FormValue("name")
+	project := r.FormValue("project")
+	description := r.FormValue("description")
+	tags := r.FormValue("tags")
 
 	log.Println(name)
 	log.Println(project)
@@ -198,9 +199,10 @@ func startActivity(w http.ResponseWriter, r *http.Request) error {
 // Stop activity.
 func stopActivity(w http.ResponseWriter, r *http.Request) error {
 	log.Println("TODO Stop activity!")
-	log.Println("got: ", r.URL.Query())
 
-	aid := r.URL.Query().Get("aid")
+	r.ParseForm()
+	log.Println(r.Form())
+	aid := r.FormValue("aid")
 
 	log.Println(aid)
 

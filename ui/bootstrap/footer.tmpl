@@ -18,9 +18,27 @@ function checkRunningActivity() {
 			$("#runningActivityCont").html(
 				'<div class="jumbotron">' +
 					'<h1>' + data.Name + '<br><small>' + data.Description + '</small></h1>' +
-					'<p><a class="btn btn-primary btn-lg" href="#" role="button">Stop activity</a></p>' +
+					'<form id="stopActivityForm" class="form-horizontal">' +
+						'<input type="hidden" name="aid" value="' + data.ActivityId + '">' +
+						'<div class="form-group col-sm-12">' +
+							'<div class="col-sm-12">' +
+								'<button type="submit" class="btn btn-primary btn-lg">Stop activity</button>' +
+							'</div>' +
+						'</div>' +
+					'</form>' +
+					'<p> <br> </p>' +
 				'</div>'
 			);
+			// Stop activity form
+			$("#stopActivityForm").submit(function (event) {
+				console.log("Handler for [#stopActivityForm].submit() called.");
+				var serializedData = $(this).serialize();
+				console.log(serializedData);
+				$.post('/StopActivity', serializedData, function (response) {
+					console.log(response);
+				});
+				event.preventDefault();
+			});
 		} else {
 			$("#runningActivityCont").html(
 				'<div class="jumbotron">' +
@@ -65,11 +83,11 @@ function checkRunningActivity() {
 			$("#activityInput").focus();
 			// Start activity form
 			$("#startActivityForm").submit(function (event) {
-				console.log("Handler for .submit() called.");
-				var activityData = $(this).serialize();
-				console.log(activityData);
-				$.getJSON("/StartActivity", function (data) {
-					console.log(data);
+				console.log("Handler for [#startActivityForm].submit() called.");
+				var serializedData = $(this).serialize();
+				console.log(serializedData);
+				$.post('/StartActivity', serializedData, function (response) {
+					console.log(response);
 				});
 				event.preventDefault();
 			});
