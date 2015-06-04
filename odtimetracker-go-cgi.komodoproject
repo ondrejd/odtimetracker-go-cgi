@@ -3,5 +3,9 @@
 <project id="aae16306-7d3f-405b-8ad4-c235d0fd5d14" kpf_version="5" name="odtimetracker-go-cgi.komodoproject">
 <preference-set idref="aae16306-7d3f-405b-8ad4-c235d0fd5d14" id="project" preftype="project">
   <long id="prefs_version">1</long>
+  <string id="userEnvironmentStartupOverride">GOPATH=/home/ondrejd/GoWorkspace
+GOROOT=/home/ondrejd/GoSdk
+PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+</string>
 </preference-set>
 </project>
