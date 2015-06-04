@@ -8,86 +8,85 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"github.com/odTimeTracker/odtimetracker-go-lib"
 	"github.com/odTimeTracker/odtimetracker-go-lib/database"
+	"html/template"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"os/user"
 	"path"
-	"log"
-	"net/http"
 	"strings"
+	"time"
 )
 
 var (
-	appName = "odTimeTracker"
-	appShortName = "odtimetracker"
-	appVersion = odtimetracker.Version{ Major: 0, Minor: 1, Maintenance: 0, }
-	appInfo = appName + " " + appVersion.String()
-	appDescription = "Simple tool for time-tracking."
-	// Used template type ("bootstrap", "dojo", "polymer"):
-	templateType = "bootstrap"
-	// Database related:
-	dbPath = getDatabasePath()
-	// Errors:
-	ErrTemplateDoesNotExist = errors.New("The template does not exist.")
+	appName                     = "odTimeTracker"
+	appShortName                = "odtimetracker"
+	appVersion                  = odtimetracker.Version{Major: 0, Minor: 1, Maintenance: 0}
+	appInfo                     = appName + " " + appVersion.String()
+	appDescription              = "Simple tool for time-tracking."
+	templateType                = "bootstrap"       // Used template type ("bootstrap", "dojo", "polymer"):
+	dbPath                      = getDatabasePath() // Path to SQLite database
+	ErrTemplateDoesNotExist     = errors.New("The template does not exist.")
 	ErrDatabaseConnectionFailed = errors.New("Unable to connect database.")
 )
 
-// define a type for the response
+// Define a type for the response
 type httpHandler struct{}
 
-// let that type implement the ServeHTTP method (defined in interface http.Handler)
+// Let that type implement the ServeHTTP method (defined in interface http.Handler)
 func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 
 	// TODO Try to use `http.HandleFunc("/images", handler)` to serve all images at once!
-	if (r.URL.String() == "/images/mstile-144x144.png") {
+	if r.URL.String() == "/images/mstile-144x144.png" {
 		fp := path.Join("images", "mstile-144x144.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/favicon-16x16.png") {
+	} else if r.URL.String() == "/images/favicon-16x16.png" {
 		fp := path.Join("images", "favicon-16x16.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/favicon-32x32.png") {
+	} else if r.URL.String() == "/images/favicon-32x32.png" {
 		fp := path.Join("images", "favicon-32x32.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/favicon-96x96.png") {
+	} else if r.URL.String() == "/images/favicon-96x96.png" {
 		fp := path.Join("images", "favicon-96x96.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/favicon-160x160.png") {
+	} else if r.URL.String() == "/images/favicon-160x160.png" {
 		fp := path.Join("images", "favicon-160x160.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/favicon-192x192.png") {
+	} else if r.URL.String() == "/images/favicon-192x192.png" {
 		fp := path.Join("images", "favicon-192x192.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/apple-touch-icon-57x57.png") {
+	} else if r.URL.String() == "/images/apple-touch-icon-57x57.png" {
 		fp := path.Join("images", "apple-touch-icon-57x57.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/apple-touch-icon-60x60.png") {
+	} else if r.URL.String() == "/images/apple-touch-icon-60x60.png" {
 		fp := path.Join("images", "apple-touch-icon-60x60.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/apple-touch-icon-72x72.png") {
+	} else if r.URL.String() == "/images/apple-touch-icon-72x72.png" {
 		fp := path.Join("images", "apple-touch-icon-72x72.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/apple-touch-icon-76x76.png") {
+	} else if r.URL.String() == "/images/apple-touch-icon-76x76.png" {
 		fp := path.Join("images", "apple-touch-icon-76x76.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/apple-touch-icon-114x114.png") {
+	} else if r.URL.String() == "/images/apple-touch-icon-114x114.png" {
 		fp := path.Join("images", "apple-touch-icon-114x114.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/apple-touch-icon-120x120.png") {
+	} else if r.URL.String() == "/images/apple-touch-icon-120x120.png" {
 		fp := path.Join("images", "apple-touch-icon-120x120.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/apple-touch-icon-144x144.png") {
+	} else if r.URL.String() == "/images/apple-touch-icon-144x144.png" {
 		fp := path.Join("images", "apple-touch-icon-144x144.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/apple-touch-icon-152x152.png") {
+	} else if r.URL.String() == "/images/apple-touch-icon-152x152.png" {
 		fp := path.Join("images", "apple-touch-icon-152x152.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/images/apple-touch-icon-180x180.png") {
+	} else if r.URL.String() == "/images/apple-touch-icon-180x180.png" {
 		fp := path.Join("images", "apple-touch-icon-180x180.png")
 		http.ServeFile(w, r, fp)
-	} else if (r.URL.String() == "/browserconfig.xml") {
+	} else if r.URL.String() == "/browserconfig.xml" {
 		log.Println("Rendering browserconfig.xml...")
 		w.Header().Set("Content-Type", "application/xml;charset=utf-8")
 		browserconfig := `<?xml version="1.0" encoding="utf-8"?>
@@ -104,15 +103,22 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 </browserconfig>
 `
 		w.Write([]byte(browserconfig))
-	} else if (r.URL.String() == "/GetRunningActivity") {
+	} else if r.URL.String() == "/ui/bootstrap/script.js" {
+		w.Header().Set("Content-Type", "text/javascript;charset=utf-8")
+		// TODO For now (when we running it from the source folder self)
+		//      this works but we need other solution!
+		javascript, err := ioutil.ReadFile("ui/bootstrap/script.js")
+		checkError(err)
+		w.Write([]byte(javascript))
+	} else if r.URL.String() == "/GetRunningActivity" {
 		getRunningActivity(w, r)
-	} else if (r.URL.String() == "/StartActivity") {
+	} else if r.URL.String() == "/StartActivity" {
 		startActivity(w, r)
-	} else if (r.URL.String() == "/StopActivity") {
+	} else if r.URL.String() == "/StopActivity" {
 		stopActivity(w, r)
-	} else if (r.URL.String() == "/ListActivities") {
+	} else if r.URL.String() == "/ListActivities" {
 		listActivities(w, r)
-	} else if (r.URL.String() == "/ListProjects") {
+	} else if r.URL.String() == "/ListProjects" {
 		listProjects(w, r)
 	} else {
 		mainPage(w, r)
@@ -142,12 +148,12 @@ func main() {
 	}
 
 	// Ensure template type is correct
-	if (tplType == "bootstrap" || tplType == "dojo" || tplType == "polymer") {
+	if tplType == "bootstrap" || tplType == "dojo" || tplType == "polymer" {
 		templateType = tplType
 	}
 
 	// TODO Theme with Polymer used is not implemented yet!
-	if (templateType == "polymer") {
+	if templateType == "polymer" {
 		log.Println("TODO Theme with Polymer used is not implemented yet!")
 		templateType = "bootstrap"
 	}
@@ -172,6 +178,7 @@ func checkError(err error) {
 	if err != nil {
 		fmt.Println("Fatal error ", err.Error())
 		os.Exit(1)
+		//panic(e)
 	}
 }
 
@@ -179,19 +186,40 @@ func checkError(err error) {
 func startActivity(w http.ResponseWriter, r *http.Request) error {
 	log.Println("TODO Start activity!")
 
+	// TODO Check if there is not any running activity already!
+
+	db, err := database.InitStorage(dbPath)
+	checkError(err)
+	defer db.Close()
+
 	r.ParseForm()
-	log.Println(r.Form())
-	name := r.FormValue("name")
-	project := r.FormValue("project")
-	description := r.FormValue("description")
-	tags := r.FormValue("tags")
+	var project database.Project
+	projectName := r.FormValue("project")
+	projects, err := database.SelectProjectByName(db, projectName)
+	checkError(err)
 
-	log.Println(name)
+	if len(projects) >= 1 {
+		project = projects[0]
+	} else if len(projects) == 0 {
+		p, err := database.InsertProject(db, projectName, "")
+		checkError(err)
+		project = p
+	}
+
 	log.Println(project)
-	log.Println(description)
-	log.Println(tags)
 
-	// ...
+	var a database.Activity
+	a, err = database.InsertActivity(db, project.ProjectId, r.FormValue("name"),
+		r.FormValue("desc"), r.FormValue("tags"))
+	a.SetProject(project)
+
+	log.Println(a)
+
+	json, err := json.Marshal(a)
+	checkError(err)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
 
 	return nil
 }
@@ -200,13 +228,26 @@ func startActivity(w http.ResponseWriter, r *http.Request) error {
 func stopActivity(w http.ResponseWriter, r *http.Request) error {
 	log.Println("TODO Stop activity!")
 
-	r.ParseForm()
-	log.Println(r.Form())
-	aid := r.FormValue("aid")
+	// TODO We don't need ActivityId but we need some security...
+	//r.ParseForm()
+	//activityId := r.FormValue("aid")
+	//log.Println(activityId)
 
-	log.Println(aid)
+	db, err := database.InitStorage(dbPath)
+	checkError(err)
+	defer db.Close()
 
-	// ...
+	ra, err := database.SelectActivityRunning(db)
+	if err != nil {
+		fmt.Printf("\nThere is no running activity!\n\n")
+		os.Exit(1)
+	}
+
+	ra.Stopped = time.Now().Format(time.RFC3339)
+	_, err = database.UpdateActivity(db, ra)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return nil
 }
@@ -273,10 +314,10 @@ func listProjects(w http.ResponseWriter, r *http.Request) error {
 func mainPage(w http.ResponseWriter, r *http.Request) error {
 	log.Println("Rendering main page...")
 
-	data := map[string]string{"Name": "odTimeTracker",}
+	data := map[string]string{"Name": "odTimeTracker"}
 
 	p := "ui/" + templateType + "/"
-	tpl, err := template.ParseFiles(p + "main.tmpl", p + "header.tmpl", p + "footer.tmpl")
+	tpl, err := template.ParseFiles(p+"main.tmpl", p+"header.tmpl", p+"footer.tmpl")
 	checkError(err)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
