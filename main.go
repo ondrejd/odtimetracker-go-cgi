@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/odTimeTracker/odtimetracker-go-lib"
 	"github.com/odTimeTracker/odtimetracker-go-lib/database"
+	"github.com/odTimeTracker/odtimetracker-go-cgi/jsonrpc"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -104,12 +105,21 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 `
 		w.Write([]byte(browserconfig))
 	} else if r.URL.String() == "/ui/bootstrap/script.js" {
+		// TODO This should be definitively rewritten!
 		w.Header().Set("Content-Type", "text/javascript;charset=utf-8")
 		// TODO For now (when we running it from the source folder self)
 		//      this works but we need other solution!
-		javascript, err := ioutil.ReadFile("ui/bootstrap/script.js")
+		js, err := ioutil.ReadFile("ui/bootstrap/script.js")
 		checkError(err)
-		w.Write([]byte(javascript))
+		w.Write([]byte(js))
+	} else if r.URL.String() == "/ui/bootstrap/style.css" {
+		// TODO This should be definitively rewritten!
+		w.Header().Set("Content-Type", "text/css;charset=utf-8")
+		// TODO For now (when we running it from the source folder self)
+		//      this works but we need other solution!
+		css, err := ioutil.ReadFile("ui/bootstrap/style.css")
+		checkError(err)
+		w.Write([]byte(css))
 	} else if r.URL.String() == "/GetRunningActivity" {
 		getRunningActivity(w, r)
 	} else if r.URL.String() == "/StartActivity" {
@@ -133,6 +143,8 @@ func init() {
 
 // Main (entry) function.
 // TODO Using command-line arguments provide several UI types ('bootstrap', 'dojo', 'polymer')
+// TODO We need some security on requests/responses...
+// TODO We need track erquests/responses...
 func main() {
 	log.Println("Entering main function...")
 
@@ -178,87 +190,95 @@ func checkError(err error) {
 	if err != nil {
 		fmt.Println("Fatal error ", err.Error())
 		os.Exit(1)
-		//panic(e)
 	}
 }
 
 // Start activity.
-func startActivity(w http.ResponseWriter, r *http.Request) error {
-	log.Println("TODO Start activity!")
-
-	// TODO Check if there is not any running activity already!
-
+// TODO Check if there is not any running activity already!
+func startActivity(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
-	checkError(err)
 	defer db.Close()
+	if err != nil {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id"), w)
+		return
+	}
+
+	// Firstly we need to check if there is no running activity
+	ra, err := database.SelectActivityRunning(db)
+	if ra.ActivityId > 0 {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.AnotherRunningActivityError, "id"), w)
+		return
+	}
 
 	r.ParseForm()
 	var project database.Project
 	projectName := r.FormValue("project")
-	projects, err := database.SelectProjectByName(db, projectName)
-	checkError(err)
+	projects, _ := database.SelectProjectByName(db, projectName)
+	// Note: We don't bother about error - in that case we just create new project.
+	//checkError(err)
 
 	if len(projects) >= 1 {
 		project = projects[0]
 	} else if len(projects) == 0 {
 		p, err := database.InsertProject(db, projectName, "")
-		checkError(err)
+		if err != nil {
+			outputJson(jsonrpc.NewErrorResponse(jsonrpc.NewProjectError, "id"), w)
+			return
+		}
 		project = p
 	}
-
-	log.Println(project)
 
 	var a database.Activity
 	a, err = database.InsertActivity(db, project.ProjectId, r.FormValue("name"),
 		r.FormValue("desc"), r.FormValue("tags"))
+	if err != nil {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.NewActivityError, "id"), w)
+		return
+	}
 	a.SetProject(project)
 
-	log.Println(a)
-
-	json, err := json.Marshal(a)
-	checkError(err)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(json)
-
-	return nil
+	var res = map[string]interface{}{
+		"Message": "Activity was successfully started.",
+		"Activity": a,
+	}
+	outputJson(jsonrpc.NewResponse(res, "id"), w)
 }
 
 // Stop activity.
-func stopActivity(w http.ResponseWriter, r *http.Request) error {
-	log.Println("TODO Stop activity!")
-
-	// TODO We don't need ActivityId but we need some security...
-	//r.ParseForm()
-	//activityId := r.FormValue("aid")
-	//log.Println(activityId)
-
+func stopActivity(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
-	checkError(err)
 	defer db.Close()
+	if err != nil {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id"), w)
+		return
+	}
 
 	ra, err := database.SelectActivityRunning(db)
 	if err != nil {
-		fmt.Printf("\nThere is no running activity!\n\n")
-		os.Exit(1)
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.NoRunningActivityError, "id"), w)
+		return
 	}
 
 	ra.Stopped = time.Now().Format(time.RFC3339)
 	_, err = database.UpdateActivity(db, ra)
 	if err != nil {
-		log.Fatal(err)
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.UpdateActivityError, "id"), w)
 	}
 
-	return nil
+	var msg = map[string]string{
+		"Message": "Activity was successfully stopped.",
+	}
+	outputJson(jsonrpc.NewResponse(msg, "id"), w)
 }
 
 // Render JSON with details about currently running activity.
-func getRunningActivity(w http.ResponseWriter, r *http.Request) error {
-	log.Println("Rendering RunningActivity.json...")
-
+func getRunningActivity(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
-	checkError(err)
 	defer db.Close()
+	if err != nil {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id"), w)
+		return
+	}
 
 	activity, _ := database.SelectActivityRunning(db)
 	json, err := json.Marshal(activity)
@@ -266,17 +286,16 @@ func getRunningActivity(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(json)
-
-	return nil
 }
 
 // Render JSON with activities.
-func listActivities(w http.ResponseWriter, r *http.Request) error {
-	log.Println("Rendering Activities.json...")
-
+func listActivities(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
-	checkError(err)
 	defer db.Close()
+	if err != nil {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id"), w)
+		return
+	}
 
 	activities, err := database.SelectActivities(db, -1)
 	checkError(err)
@@ -286,17 +305,16 @@ func listActivities(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(json)
-
-	return nil
 }
 
 // Render JSON with projects.
-func listProjects(w http.ResponseWriter, r *http.Request) error {
-	log.Println("Rendering Projects.json...")
-
+func listProjects(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
-	checkError(err)
 	defer db.Close()
+	if err != nil {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id"), w)
+		return
+	}
 
 	projects, err := database.SelectProjects(db, -1)
 	checkError(err)
@@ -306,14 +324,10 @@ func listProjects(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(json)
-
-	return nil
 }
 
 // Render main HTML page.
-func mainPage(w http.ResponseWriter, r *http.Request) error {
-	log.Println("Rendering main page...")
-
+func mainPage(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{"Name": "odTimeTracker"}
 
 	p := "ui/" + templateType + "/"
@@ -323,8 +337,6 @@ func mainPage(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	err = tpl.Execute(w, data)
 	checkError(err)
-
-	return nil
 }
 
 // Print usage information.
@@ -336,4 +348,15 @@ func usage() {
 	fmt.Printf("%s --type=[TYPE]  Use template of given type\n\n", appShortName)
 	fmt.Printf("Available template types are: bootstrap,dojo,polymer\n\n")
 	os.Exit(0)
+}
+
+// Helper function for printing Json.
+func outputJson(data interface{}, w http.ResponseWriter) {
+	log.Println(data)
+
+	json, err := json.Marshal(data)
+	checkError(err)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
 }

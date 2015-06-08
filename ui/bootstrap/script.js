@@ -1,150 +1,238 @@
 // Copyright 2015 Ondrej Donek. All rights reserved.
-// See LICENSE file for more informations about licensing.
+// See LICENSE file for more details about licensing.
 
+/**
+ * Capitalize the first letter of given string.
+ *
+ * @param {String} aStr
+ * @returns {String}
+ * @see http://stackoverflow.com/questions/1026069/capitalize-the-first-letter-of-string-in-javascript#answer-1026087
+ */
+function capitalizeFirstLetter(aStr) {
+	return aStr.charAt(0).toUpperCase() + aStr.slice(1);
+} // end capitalizeFirstLetter(aStr)
+
+/**
+ * Add message to the list.
+ *
+ * @param {String} aType    Message type ('danger','info','success','warning').
+ * @param {String} aMessage Text of the message.
+ * @returns {void}
+ */
+function addMessage(aType, aMessage) {
+	$("#messagesCont").append(
+		'<div class="alert alert-warning alert-dismissible" role="alert">' +
+//			'<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+//				'<span aria-hidden="true" onclick="setTimeout(function() { updateMessagesCountBadge() }, 1200)">&times;</span>' +
+//			'</button>' +
+			'<strong>' + capitalizeFirstLetter(aType) + '!</strong> ' + aMessage +
+		'</div>'
+	);
+	updateMessagesCountBadge();
+} // end addMessage(aType, aMessage)
+
+/**
+ * Update badge in message tab button with current number of the messages.
+ *
+ * @returns {void}
+ */
+function updateMessagesCountBadge() {
+	$("#messagesCountBadge").html($("#messagesCont > div.alert").length);
+} // end updateMessagesCountBadge()
+
+/**
+ * Display a simple form for stopping the activity.
+ *
+ * @param {Object} aActivity
+ * @returns {void}
+ */
+function printActivityStopForm(aActivity) {
+	$("#runningActivityCont").html(
+		'<div class="jumbotron">' +
+			'<h1>' +
+				aActivity.Name + '<br>' +
+				'<small>' + aActivity.Description + '</small>' +
+			'</h1>' +
+			'<form id="stopActivityForm" class="form-horizontal">' +
+				'<input type="hidden" name="aid" value="' + aActivity.ActivityId + '">' +
+				'<div class="form-group col-sm-12">' +
+					'<div class="col-sm-12">' +
+						'<button type="submit" class="btn btn-primary btn-lg">Stop activity</button>' +
+					'</div>' +
+				'</div>' +
+			'</form>' +
+			'<p> <br> </p>' +
+		'</div>'
+	);
+	$("#stopActivityForm").submit(function (event) {
+		event.preventDefault();
+		$.post('/StopActivity', $(this).serialize(), function (response) {
+			// TODO We should also check response/request ID!!!
+			console.log(response);
+			if ("Error" in response) {
+				addMessage("error", response.Error.Message);
+			} else {
+				addMessage("success", response.Result.Message);
+			}
+			checkRunningActivity();
+		});
+	});
+} // end printActivityStopForm(aActivity)
+
+/**
+ * Display for for inserting a new activity on the home tab.
+ *
+ * @returns {void}
+ */
+function printActivityForm() {
+	$("#runningActivityCont").html(
+		'<div class="jumbotron">' +
+			'<h1>No activity is running...</h1>' +
+			'<p>You can start one right now!</p>' +
+			'<form id="startActivityForm" class="form-horizontal">' +
+				'<div class="form-group form-group-lg">' +
+					'<label class="col-sm-2 control-label" for="activityInput">Activity</label>' +
+					'<div class="col-sm-10">' +
+						'<input class="form-control" type="text" name="name" id="activityInput" placeholder="Enter activity description&hellip;">' +
+					'</div>' +
+				'</div>' +
+				'<div class="form-group form-group-sm">' +
+					'<label class="col-sm-2 control-label" for="projectInput">Project</label>' +
+					'<div class="col-sm-10">' +
+						'<input class="form-control" type="text" name="project" id="projectInput" placeholder="Enter project&hellip;">' +
+					'</div>' +
+				'</div>' +
+				'<div class="form-group form-group-sm">' +
+					'<label class="col-sm-2 control-label" for="tagsInput">Tags</label>' +
+					'<div class="col-sm-10">' +
+						'<input class="form-control" type="text" name="tags" id="tagsInput" placeholder="Enter comma-separated tags&hellip;">' +
+					'</div>' +
+				'</div>' +
+				'<div class="form-group form-group-sm">' +
+					'<label class="col-sm-2 control-label" for="descInput">Description</label>' +
+					'<div class="col-sm-10">' +
+						'<input class="form-control" type="text" name="desc" id="descInput" placeholder="Enter additional description for the activity&hellip;">' +
+					'</div>' +
+				'</div>' +
+				'<div class="form-group col-sm-12">' +
+					'<div class="col-sm-2"> </div>' +
+					'<div class="col-sm-10">' +
+						'<button type="submit" class="btn btn-primary btn-lg">Start activity</button>' +
+					'</div>' +
+				'</div>' +
+			'</form>' +
+			'<p> <br> </p>' +
+		'</div>'
+	);
+	$("#startActivityForm").submit(function (event) {
+		event.preventDefault();
+		$.post('/StartActivity', $(this).serialize(), function (response) {
+			// TODO We should also check response/request ID!!!
+			console.log(response);
+			if ("Error" in response) {
+				addMessage("error", response.Error.Message);
+			} else {
+				addMessage("success", response.Result.Message);
+			}
+			checkRunningActivity();
+		});
+	});
+	$("#activityInput").focus();
+} // end printActivityForm()
+
+/**
+ * Check if there is a running activity and display the result on the hometab.
+ *
+ * @returns {void}
+ */
 function checkRunningActivity() {
 	$.getJSON("/GetRunningActivity", function (data) {
-		if (!("ActivityId" in data)) {
-			// Something goes wrong with the server...
-			console.log(data);
-			return;
-		}
 		if (data.ActivityId > 0) {
-			console.log(data);
 			// There is a running activity...
-			$("#runningActivityCont").html(
-				'<div class="jumbotron">' +
-					'<h1>' + data.Name + '<br><small>' + data.Description + '</small></h1>' +
-					'<form id="stopActivityForm" class="form-horizontal">' +
-						'<input type="hidden" name="aid" value="' + data.ActivityId + '">' +
-						'<div class="form-group col-sm-12">' +
-							'<div class="col-sm-12">' +
-								'<button type="submit" class="btn btn-primary btn-lg">Stop activity</button>' +
-							'</div>' +
-						'</div>' +
-					'</form>' +
-					'<p> <br> </p>' +
-				'</div>'
-			);
-			// Stop activity form
-			$("#stopActivityForm").submit(function (event) {
-				console.log("Handler for [#stopActivityForm].submit() called.");
-				var serializedData = $(this).serialize();
-				console.log(serializedData);
-				$.post('/StopActivity', serializedData, function (response) {
-					console.log(response);
-				});
-				event.preventDefault();
-			});
+			printActivityStopForm(data);
 		} else {
-			$("#runningActivityCont").html(
-				'<div class="jumbotron">' +
-					'<h1>No activity is running...</h1>' +
-					'<p>You can start one right now!</p>' +
-					'<form id="startActivityForm" class="form-horizontal">' +
-						'<div class="form-group form-group-lg">' +
-							'<label class="col-sm-2 control-label" for="activityInput">Activity</label>' +
-							'<div class="col-sm-10">' +
-								'<input class="form-control" type="text" name="name" id="activityInput" placeholder="Enter activity description&hellip;">' +
-							'</div>' +
-						'</div>' +
-						'<div class="form-group form-group-sm">' +
-							'<label class="col-sm-2 control-label" for="projectInput">Project</label>' +
-							'<div class="col-sm-10">' +
-								'<input class="form-control" type="text" name="project" id="projectInput" placeholder="Enter project&hellip;">' +
-							'</div>' +
-						'</div>' +
-						'<div class="form-group form-group-sm">' +
-							'<label class="col-sm-2 control-label" for="tagsInput">Tags</label>' +
-							'<div class="col-sm-10">' +
-								'<input class="form-control" type="text" name="tags" id="tagsInput" placeholder="Enter comma-separated tags&hellip;">' +
-							'</div>' +
-						'</div>' +
-						'<div class="form-group form-group-sm">' +
-							'<label class="col-sm-2 control-label" for="descInput">Description</label>' +
-							'<div class="col-sm-10">' +
-								'<input class="form-control" type="text" name="desc" id="descInput" placeholder="Enter additional description for the activity&hellip;">' +
-							'</div>' +
-						'</div>' +
-						'<div class="form-group col-sm-12">' +
-							'<div class="col-sm-2"> </div>' +
-							'<div class="col-sm-10">' +
-								'<button type="submit" class="btn btn-primary btn-lg">Start activity</button>' +
-							'</div>' +
-						'</div>' +
-					'</form>' +
-					'<p> <br> </p>' +
-				'</div>'
-			);
-			// Set correct focus
-			$("#activityInput").focus();
-			// Start activity form
-			$("#startActivityForm").submit(function (event) {
-				var serializedData = $(this).serialize();
-				$.post('/StartActivity', serializedData, function (response) {
-					// TODO If is returned correct new activity show it as running
-					// TODO Otherwise show error message
-					console.log(response);
-				});
-				event.preventDefault();
-			});
+			// There is no running activity...
+			printActivityForm();
 		}
 	});
-}
+} // end checkRunningActivity()
 
+/**
+ * Load existing activities.
+ *
+ * @returns {void}
+ */
+function loadActivities() {
+	$.getJSON("/ListActivities", function (data) {
+		var items = [];
+		$.each(data, function(key, v) {
+			var cls = (v.Stopped == "") ? ' class="active"' : '';
+			var desc = ((v.Description != "") ? "<br/><small>" + v.Description + "</small>" : "");
+			items.push("<tr" + cls + ">" +
+				'<td class="col-id">' + v.ActivityId + "</td>" +
+				'<td class="col-star"><span class="glyphicon glyphicon-star-empty" title="..."></span></td>' +
+				'<td class="col-text"><h4>' + v.Name + desc + "</h4></td>" +
+				'<td class="col-project">' + v.ProjectId + "</td>" +
+				'<td class="col-datetime">' + v.Started + "</td>" +
+				'<td class="col-datetime">' + v.Stopped + "</td>" +
+			"</tr>");
+		});
+		$("#activitiesTable").html(items.join(""));
+	});
+} // end loadActivities()
+
+/**
+ * Load existing activities.
+ *
+ * @returns {void}
+ */
+function loadProjects() {
+	$.getJSON("/ListProjects", function (data) {
+		var items = [];
+		$.each(data, function(key, v) {
+			var desc = ((v.Description != "") ? "<br/><small>" + v.Description + "</small>" : "");
+			items.push("<tr>" +
+				'<td class="col-id">' + v.ProjectId + "</td>" +
+				'<td class="col-star">&nbsp;</td>' +
+				'<td class="col-text"><h4>' + v.Name + desc + "</td>" +
+				'<td class="col-datetime">' + v.Created + "</td>" +
+			"</tr>");
+		});
+		$("#projectsTable").html(items.join(""));
+	});
+} // end loadProjects()
+
+/**
+ * Initialize our application.
+ */
 $(document).ready(function (e) {
+	// Check if there is a running activity
+	checkRunningActivity();
+
 	// Home tab
 	$('#tabBtn1 a').click(function (e) {
 		e.preventDefault();
-		// Check if there is a running activity
 		checkRunningActivity();
-		// Show tab
 		$(this).tab('show');
 	});
-	// Tab with activities list
+
+	// Activities tab
 	$('#tabBtn2 a').click(function (e) {
 		e.preventDefault();
-		// Load activities JSON
-		$.getJSON("/ListActivities", function (data) {
-			var items = [];
-			$.each(data, function(key, v) {
-				var cls = (v.Stopped == "") ? ' class="active"' : '';
-				items.push("<tr" + cls + ">" +
-					"<td>" + v.ActivityId + "</td>" +
-					"<td>" + v.Name + "</td>" +
-					"<td>" + v.Started + "</td>" +
-					"<td>" + v.Stopped + "</td>" +
-				"</tr>");
-			});
-			$("#activitiesTable").html(items.join(""));
-		});
-		// Show tab
+		loadActivities();
 		$(this).tab('show');
 	});
-	// Tab with projects and tags
+
+	// Organize projects/tags tab
 	$('#tabBtn3 a').click(function (e) {
 		e.preventDefault();
-		// Show tab
+		loadProjects();
 		$(this).tab('show');
-		// Load projects JSON
-		$.getJSON("/ListProjects", function (data) {
-			var items = [];
-			$.each(data, function(key, v) {
-				items.push("<tr>" +
-					"<td>" + v.ProjectId + "</td>" +
-					"<td>" + v.Name + "</td>" +
-					"<td>" + v.Description + "</td>" +
-					"<td>" + v.Created + "</td>" +
-				"</tr>");
-			});
-			$("#projectsTable").html(items.join(""));
-		});
 	});
+
 	// Helper tab with tasks
 	$('#tabBtn4 a').click(function (e) {
 		e.preventDefault();
 		$(this).tab('show');
 	});
-
-	// Check if there is a running activity
-	checkRunningActivity();
 });

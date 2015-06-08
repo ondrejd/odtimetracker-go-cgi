@@ -1,0 +1,24 @@
+/**
+ * Copyright 2015 Ondrej Donek. All rights reserved.
+ * See LICENSE file for more details about licensing.
+ */
+
+.table-data {}
+.table-data thead {}
+.table-data thead th.col-id { text-align: center; }
+.table-data thead th.col-star {}
+.table-data thead th.col-text {}
+.table-data thead th.col-datetime {}
+
+.table-data tbody td { vertical-align: middle !important; }
+.table-data tbody td.col-id { text-align: center; }
+.table-data tbody td.col-star {}
+.table-data tbody td.col-star span {
+	cursor: pointer;
+	position: relative;
+	top: 2px;
+}
+.table-data tbody td.col-text {}
+.table-data tbody td.col-text h4 { margin: 0px 0px 0px 0px; }
+.table-data tbody td.col-text h4 small {}
+.table-data tbody td.col-datetime {}
