@@ -148,24 +148,26 @@ func init() {
 func main() {
 	log.Println("Entering main function...")
 
-	if len(os.Args) > 1 {
+	log.Println(os.Args);
+
+	if len(os.Args) > 2 {
 		usage()
 	}
 
 	var tplType string
-	if os.Args[0] == "--help" {
+	if os.Args[1] == "--help" {
 		usage()
-	} else if strings.HasPrefix(os.Args[0], "--type=") == true {
-		tplType = strings.Replace(os.Args[0], "--type=", "", 1)
+	} else if strings.HasPrefix(os.Args[1], "--type=") == true {
+		tplType = strings.Replace(os.Args[1], "--type=", "", 1)
 	}
 
 	// Ensure template type is correct
-	if tplType == "bootstrap" || tplType == "dojo" || tplType == "polymer" {
+	if tplType == "angularjs" || tplType == "bootstrap" || tplType == "dojo" || tplType == "polymer" {
 		templateType = tplType
 	}
 
 	// TODO Theme with Polymer used is not implemented yet!
-	if templateType == "polymer" {
+	if templateType == "angularjs" || templateType == "polymer" {
 		log.Println("TODO Theme with Polymer used is not implemented yet!")
 		templateType = "bootstrap"
 	}
@@ -199,7 +201,7 @@ func startActivity(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
 	defer db.Close()
 	if err != nil {
-		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id"), w)
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id-XXX"), w)
 		return
 	}
 
@@ -222,7 +224,7 @@ func startActivity(w http.ResponseWriter, r *http.Request) {
 	} else if len(projects) == 0 {
 		p, err := database.InsertProject(db, projectName, "")
 		if err != nil {
-			outputJson(jsonrpc.NewErrorResponse(jsonrpc.NewProjectError, "id"), w)
+			outputJson(jsonrpc.NewErrorResponse(jsonrpc.NewProjectError, "id-XXX"), w)
 			return
 		}
 		project = p
@@ -232,7 +234,7 @@ func startActivity(w http.ResponseWriter, r *http.Request) {
 	a, err = database.InsertActivity(db, project.ProjectId, r.FormValue("name"),
 		r.FormValue("desc"), r.FormValue("tags"))
 	if err != nil {
-		outputJson(jsonrpc.NewErrorResponse(jsonrpc.NewActivityError, "id"), w)
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.NewActivityError, "id-XXX"), w)
 		return
 	}
 	a.SetProject(project)
@@ -241,7 +243,7 @@ func startActivity(w http.ResponseWriter, r *http.Request) {
 		"Message": "Activity was successfully started.",
 		"Activity": a,
 	}
-	outputJson(jsonrpc.NewResponse(res, "id"), w)
+	outputJson(jsonrpc.NewResponse(res, "id-XXX"), w)
 }
 
 // Stop activity.
@@ -249,26 +251,26 @@ func stopActivity(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
 	defer db.Close()
 	if err != nil {
-		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id"), w)
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id-XXX"), w)
 		return
 	}
 
 	ra, err := database.SelectActivityRunning(db)
 	if err != nil {
-		outputJson(jsonrpc.NewErrorResponse(jsonrpc.NoRunningActivityError, "id"), w)
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.NoRunningActivityError, "id-XXX"), w)
 		return
 	}
 
 	ra.Stopped = time.Now().Format(time.RFC3339)
 	_, err = database.UpdateActivity(db, ra)
 	if err != nil {
-		outputJson(jsonrpc.NewErrorResponse(jsonrpc.UpdateActivityError, "id"), w)
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.UpdateActivityError, "id-XXX"), w)
 	}
 
 	var msg = map[string]string{
 		"Message": "Activity was successfully stopped.",
 	}
-	outputJson(jsonrpc.NewResponse(msg, "id"), w)
+	outputJson(jsonrpc.NewResponse(msg, "id-XXX"), w)
 }
 
 // Render JSON with details about currently running activity.
@@ -293,7 +295,7 @@ func listActivities(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
 	defer db.Close()
 	if err != nil {
-		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id"), w)
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id-XXX"), w)
 		return
 	}
 
@@ -312,12 +314,14 @@ func listProjects(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
 	defer db.Close()
 	if err != nil {
-		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id"), w)
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id-XXX"), w)
 		return
 	}
 
 	projects, err := database.SelectProjects(db, -1)
-	checkError(err)
+	if err != nil {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id-XXX"), w)
+	}
 
 	json, err := json.Marshal(projects)
 	checkError(err)
