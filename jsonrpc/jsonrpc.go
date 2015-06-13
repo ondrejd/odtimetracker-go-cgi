@@ -75,6 +75,9 @@ var NewProjectError = &Error{Code: 32005, Message: "Inserting new project failed
 // Our custom error: "Inserting new activity failed".
 var NewActivityError = &Error{Code: 32006, Message: "Inserting new activity failed"}
 
+// Our custom error: "Loading data from database failed".
+var LoadDataError = &Error{Code: 32007, Message: "Loading data from database failed"}
+
 // Define simple JSON-RPC response.
 type Response struct {
 	JsonRpc string      // Contains version of JSON-RPC protocol. MUST be exactly "2.0.".

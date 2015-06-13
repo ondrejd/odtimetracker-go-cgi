@@ -2,6 +2,23 @@
 // See LICENSE file for more details about licensing.
 
 /**
+ * Generate random string.
+ *
+ * @param  {Integer} aLength
+ * @return {String}
+ */
+function getRandomString(aLength) {
+	var rand = "";
+	var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+	for (var i=0; i<aLength; i++) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+
+	return text;
+}
+
+/**
  * Capitalize the first letter of given string.
  *
  * @param {String} aStr
@@ -18,16 +35,25 @@ function capitalizeFirstLetter(aStr) {
  * @param {String} aType    Message type ('danger','info','success','warning').
  * @param {String} aMessage Text of the message.
  * @returns {void}
+ *
+ * @todo Method for updating messages count is called BEFORE the message is actually removed...
+ * @todo Add icons according to message type (e.g. for type 'error' use 'glyphicon-exclamation-sign' etc.)
  */
 function addMessage(aType, aMessage) {
 	$("#messagesCont").append(
 		'<div class="alert alert-warning alert-dismissible" role="alert">' +
-//			'<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-//				'<span aria-hidden="true" onclick="setTimeout(function() { updateMessagesCountBadge() }, 1200)">&times;</span>' +
-//			'</button>' +
+			'<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+				'<span aria-hidden="true">&times;</span>' +
+			'</button>' +
 			'<strong>' + capitalizeFirstLetter(aType) + '!</strong> ' + aMessage +
 		'</div>'
 	);
+
+	// Event handler for closing messages
+	$('#messagesCont .alert').on('closed.bs.alert', function () {
+		console.log("On alert close...")
+	});
+
 	updateMessagesCountBadge();
 } // end addMessage(aType, aMessage)
 
@@ -50,8 +76,11 @@ function printActivityStopForm(aActivity) {
 	$("#runningActivityCont").html(
 		'<div class="jumbotron">' +
 			'<h1>' +
-				aActivity.Name + '<br>' +
-				'<small>' + aActivity.Description + '</small>' +
+				aActivity.Name +
+				'&nbsp;<a href="#" title="Edit activity" aria-hidden="true">' +
+					'<small><span class="glyphicon glyphicon-pencil"></span></small>' +
+				'</a>' +
+				'<br><small>' + aActivity.Description + '</small>' +
 			'</h1>' +
 			'<form id="stopActivityForm" class="form-horizontal">' +
 				'<input type="hidden" name="aid" value="' + aActivity.ActivityId + '">' +
@@ -230,7 +259,7 @@ $(document).ready(function (e) {
 		$(this).tab('show');
 	});
 
-	// Helper tab with tasks
+	// Helper tab with messages
 	$('#tabBtn4 a').click(function (e) {
 		e.preventDefault();
 		$(this).tab('show');
