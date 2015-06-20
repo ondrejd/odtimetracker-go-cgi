@@ -150,15 +150,15 @@ func main() {
 
 	log.Println(os.Args);
 
+	var tplType string
 	if len(os.Args) > 2 {
 		usage()
-	}
-
-	var tplType string
-	if os.Args[1] == "--help" {
-		usage()
-	} else if strings.HasPrefix(os.Args[1], "--type=") == true {
-		tplType = strings.Replace(os.Args[1], "--type=", "", 1)
+	} else if len(os.Args) == 2 {
+		if os.Args[1] == "--help" {
+			usage()
+		} else if strings.HasPrefix(os.Args[1], "--type=") == true {
+			tplType = strings.Replace(os.Args[1], "--type=", "", 1)
+		}
 	}
 
 	// Ensure template type is correct
