@@ -28,7 +28,7 @@ var (
 	appVersion                  = odtimetracker.Version{Major: 0, Minor: 1, Maintenance: 0}
 	appInfo                     = appName + " " + appVersion.String()
 	appDescription              = "Simple tool for time-tracking."
-	templateType                = "bootstrap"       // Used template type ("bootstrap", "dojo", "polymer"):
+	templateType                = "bootstrap"       // Used template type (just "bootstrap" at the moment):
 	dbPath                      = getDatabasePath() // Path to SQLite database
 	ErrTemplateDoesNotExist     = errors.New("The template does not exist.")
 	ErrDatabaseConnectionFailed = errors.New("Unable to connect database.")
@@ -142,9 +142,9 @@ func init() {
 }
 
 // Main (entry) function.
-// TODO Using command-line arguments provide several UI types ('bootstrap', 'dojo', 'polymer')
+// TODO Using command-line arguments provide several UI types (just 'bootstrap' at the moment)
 // TODO We need some security on requests/responses...
-// TODO We need track erquests/responses...
+// TODO We need track requests/responses...
 func main() {
 	log.Println("Entering main function...")
 
@@ -162,7 +162,7 @@ func main() {
 	}
 
 	// Ensure template type is correct
-	if tplType == "angularjs" || tplType == "bootstrap" || tplType == "dojo" || tplType == "polymer" {
+	if tplType == "angularjs" || tplType == "bootstrap" || tplType == "polymer" {
 		templateType = tplType
 	}
 
@@ -173,6 +173,7 @@ func main() {
 	}
 
 	var h httpHandler
+	// TODO User should have possibility of changing this (configuration file)!
 	http.ListenAndServe("localhost:4000", h)
 }
 
@@ -184,6 +185,7 @@ func getDatabasePath() string {
 		return ":memory:"
 	}
 
+	// TODO User should have possibility of changing this (configuration file)!
 	return path.Join(usr.HomeDir, ".odtimetracker.sqlite")
 }
 
@@ -335,7 +337,7 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{"Name": "odTimeTracker"}
 
 	p := "ui/" + templateType + "/"
-	tpl, err := template.ParseFiles(p+"main.tmpl", p+"header.tmpl", p+"footer.tmpl")
+	tpl, err := template.ParseFiles(p +  "main.tmpl", p + "header.tmpl", p + "footer.tmpl")
 	checkError(err)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -350,7 +352,7 @@ func usage() {
 	fmt.Printf("Usage:\n\n")
 	fmt.Printf("%s --help         Print this help\n", appShortName)
 	fmt.Printf("%s --type=[TYPE]  Use template of given type\n\n", appShortName)
-	fmt.Printf("Available template types are: bootstrap,dojo,polymer\n\n")
+	fmt.Printf("Available template types are: bootstrap\n\n")
 	os.Exit(0)
 }
 
