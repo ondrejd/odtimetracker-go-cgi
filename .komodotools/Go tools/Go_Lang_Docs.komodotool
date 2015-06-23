@@ -1,9 +1,0 @@
-{
-  "keyboard_shortcut": "", 
-  "version": "1.0.12", 
-  "name": "Go Lang Docs", 
-  "type": "URL", 
-  "value": [
-    "http://localhost:6060"
-  ]
-}
