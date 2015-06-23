@@ -1,4 +1,4 @@
-# odTimeTracker CLI Tool written in Go
+# odTimeTracker web application written in Go
 
 [![License](https://img.shields.io/badge/license-MPL-blue.svg)](https://www.mozilla.org/MPL/2.0/) [![Build Status](https://travis-ci.org/ondrejd/odtimetracker-go-cgi.svg)](https://travis-ci.org/ondrejd/odtimetracker-go-cgi)
 
