@@ -105,20 +105,60 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 `
 		w.Write([]byte(browserconfig))
 	} else if r.URL.String() == "/ui/bootstrap/script.js" {
-		// TODO This should be definitively rewritten!
 		w.Header().Set("Content-Type", "text/javascript;charset=utf-8")
-		// TODO For now (when we running it from the source folder self)
-		//      this works but we need other solution!
-		js, err := ioutil.ReadFile("ui/bootstrap/script.js")
-		checkError(err)
+		js, _ := ioutil.ReadFile("ui/bootstrap/script.js")
 		w.Write([]byte(js))
 	} else if r.URL.String() == "/ui/bootstrap/style.css" {
-		// TODO This should be definitively rewritten!
 		w.Header().Set("Content-Type", "text/css;charset=utf-8")
-		// TODO For now (when we running it from the source folder self)
-		//      this works but we need other solution!
-		css, err := ioutil.ReadFile("ui/bootstrap/style.css")
-		checkError(err)
+		css, _ := ioutil.ReadFile("ui/bootstrap/style.css")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/css/bootstrap.min.css" {
+		w.Header().Set("Content-Type", "text/css;charset=utf-8")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/css/bootstrap.min.css")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/css/bootstrap-theme.min.css" {
+		w.Header().Set("Content-Type", "text/css;charset=utf-8")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/css/bootstrap-theme.min.css")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/css/jquery-ui.min.css" {
+		w.Header().Set("Content-Type", "text/css;charset=utf-8")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/css/jquery-ui.min.css")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/css/jquery-ui.structure.min.css" {
+		w.Header().Set("Content-Type", "text/css;charset=utf-8")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/css/jquery-ui.structure.min.css")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/js/bootstrap-3.3.5.min.js" {
+		w.Header().Set("Content-Type", "text/javascript;charset=utf-8")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/js/bootstrap-3.3.5.min.js")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/js/jquery-1.11.3.min.js" {
+		w.Header().Set("Content-Type", "text/javascript;charset=utf-8")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/js/jquery-1.11.3.min.js")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/js/jquery-ui-1.11.4.min.js" {
+		w.Header().Set("Content-Type", "text/javascript;charset=utf-8")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/js/jquery-ui-1.11.4.min.js")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/fonts/glyphicons-halflings-regular.eot" {
+		w.Header().Set("Content-Type", "application/vnd.ms-fontobject")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/fonts/glyphicons-halflings-regular.eot")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/fonts/glyphicons-halflings-regular.svg" {
+		w.Header().Set("Content-Type", "image/svg+xml")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/fonts/glyphicons-halflings-regular.svg")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/fonts/glyphicons-halflings-regular.ttf" {
+		w.Header().Set("Content-Type", "application/x-font-ttf")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/fonts/glyphicons-halflings-regular.ttf")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/fonts/glyphicons-halflings-regular.woff" {
+		w.Header().Set("Content-Type", "application/font-woff")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/fonts/glyphicons-halflings-regular.woff")
+		w.Write([]byte(css))
+	} else if r.URL.String() == "/ui/bootstrap/assets/fonts/glyphicons-halflings-regular.woff2" {
+		w.Header().Set("Content-Type", "application/font-woff2")
+		css, _ := ioutil.ReadFile("ui/bootstrap/assets/fonts/glyphicons-halflings-regular.woff2")
 		w.Write([]byte(css))
 	} else if r.URL.String() == "/GetRunningActivity" {
 		getRunningActivity(w, r)
@@ -130,6 +170,10 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		listActivities(w, r)
 	} else if r.URL.String() == "/ListProjects" {
 		listProjects(w, r)
+	} else if r.URL.String() == "/ProjectNameAutocomplete" {
+		projectsAutocomplete(w, r)
+	} else if r.URL.String() == "/CountOfProjectActivities" {
+		countOfProjectActivities(w, r)
 	} else {
 		mainPage(w, r)
 	}
@@ -234,7 +278,7 @@ func startActivity(w http.ResponseWriter, r *http.Request) {
 
 	var a database.Activity
 	a, err = database.InsertActivity(db, project.ProjectId, r.FormValue("name"),
-		r.FormValue("desc"), r.FormValue("tags"))
+		r.FormValue("description"), r.FormValue("tags"))
 	if err != nil {
 		outputJson(jsonrpc.NewErrorResponse(jsonrpc.NewActivityError, "id-XXX"), w)
 		return
@@ -326,6 +370,41 @@ func listProjects(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json, err := json.Marshal(projects)
+	checkError(err)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
+}
+
+// Provide auto-complete for projects.
+func projectsAutocomplete(w http.ResponseWriter, r *http.Request) {
+	db, err := database.InitStorage(dbPath)
+	defer db.Close()
+	if err != nil {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id-XXX"), w)
+		return
+	}
+
+	r.ParseForm()
+	term := r.FormValue("term")
+
+	projects, err := database.SelectProjectWithTerm(db, term)
+	if err != nil {
+		outputJson(jsonrpc.NewErrorResponse(jsonrpc.InitStorageError, "id-XXX"), w)
+	}
+
+	json, err := json.Marshal(projects)
+	checkError(err)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
+}
+
+// Return count of activities of given project.
+func countOfProjectActivities(w http.ResponseWriter, r *http.Request) {
+	// TODO Implement this
+	data := struct { ActivitiesCount int64 }{ 0, }
+	json, err := json.Marshal(data)
 	checkError(err)
 
 	w.Header().Set("Content-Type", "application/json")
