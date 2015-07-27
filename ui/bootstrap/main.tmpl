@@ -31,7 +31,7 @@
 					<div class="form-group form-group-lg">
 						<label class="col-sm-2 control-label" for="activityInput">Activity</label>
 						<div class="col-sm-10">
-							<input class="form-control" type="text" name="name" id="activityInput" placeholder="Enter activity description&hellip;">
+							<input class="form-control" type="text" name="name" id="activityInput" placeholder="Enter activity name&hellip;">
 						</div>
 					</div>
 					<div class="form-group form-group-sm">
@@ -59,7 +59,7 @@
 						</div>
 					</div>
 				</form>
-				<p> <br> </p>
+				<!--<p> <br> </p>-->
 			</div>
 			<div id="stopActivityJumbotron" class="jumbotron" aria-hidden="true" style="display: none;">
 				<h2>
@@ -141,7 +141,7 @@
 					<h4 class="modal-title" id="myModalLabel">Odstranit aktivitu</h4>
 				</div>
 				<div class="modal-body">
-					<p style="color:#f30;font-weight:bold;">XXX Dokončit!</p>
+					<p>Chcete skutečně odstranit aktivitu <b id="rad_ActivityName">...</b> s ID <code id="rad_ActivityId">-</code>?</p>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">Zavřít</button>
@@ -151,7 +151,7 @@
 		</div>
 	</div><!-- //#RemoveActivityDlg -->
 
-	<!-- Edit project dialog -->
+	<!-- Edit activity dialog -->
 	<div class="modal fade" id="EditActivityDlg" tabindex="-1" role="dialog" aria-labelledby="EditActivityDlgLabel" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">
@@ -160,11 +160,37 @@
 					<h4 class="modal-title" id="myModalLabel">Upravit aktivitu</h4>
 				</div>
 				<div class="modal-body">
-					<p style="color:#f30;font-weight:bold;">XXX Dokončit!</p>
+					<form id="ead_form">
+						<input type="hidden" name="activityId" id="ead_activityId">
+						<div class="form-group form-group-lg">
+							<label class="control-label" for="ead_name">Activity</label>
+							<input class="form-control" type="text" name="name" id="ead_name" placeholder="Enter activity name&hellip;">
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label" for="ead_project">Project</label>
+							<input class="form-control" type="text" name="project" id="ead_project" placeholder="Enter project&hellip;">
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label" for="ead_tags">Tags</label>
+							<input class="form-control" type="text" name="tags" id="ead_tags" placeholder="Enter comma-separated tags&hellip;">
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label" for="ead_tags">Description</label>
+							<input class="form-control" type="text" name="description" id="ead_description" placeholder="Enter additional description for the activity&hellip;">
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label" for="ead_started">Started</label>
+							<input class="form-control" type="text" name="started" id="ead_started" placeholder="Enter start time of the activity&hellip;">
+						</div>
+						<div class="form-group form-group-sm">
+							<label class="control-label" for="ead_stopped">Stopped</label>
+							<input class="form-control" type="text" name="stopped" id="ead_stopped" placeholder="Enter end time of the activity&hellip;">
+						</div>
+					</form>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">Zavřít</button>
-					<button type="button" class="btn btn-primary">Uložit</button>
+					<button type="button" class="btn btn-primary" disabled>Uložit</button>
 				</div>
 			</div>
 		</div>
@@ -179,13 +205,11 @@
 					<h4 class="modal-title" id="myModalLabel">Odstranit projekt</h4>
 				</div>
 				<div class="modal-body">
-					<p style="color:#f30;font-weight:bold;">XXX Dokončit!</p>
-					<p style="color:#f30;font-weight:bold;">XXX Zjistit zda jsou k projektu připojeny nějaké aktivity a zobrazit jejich počet.</p>
-					<p style="color:#f30;font-weight:bold;">XXX Pokud jsou k projektu přiřazeny aktivity, tak nabídnout možnosti (smazat také nebo přiřadit k jinému projektu - nabídnout je)</p>
+					<p>Chcete skutečně odstranit project <b id="rpd_ProjectName">...</b> s ID <code id="rpd_ProjectId">-</code>?</p>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">Zavřít</button>
-					<button type="button" class="btn btn-danger">Odstranit</button>
+					<button type="button" class="btn btn-danger" disabled>Odstranit</button>
 				</div>
 			</div>
 		</div>
@@ -200,17 +224,17 @@
 					<h4 class="modal-title" id="myModalLabel">Upravit projekt</h4>
 				</div>
 				<div class="modal-body">
-					<form>
+					<form id="epd_form">
 						<input type="hidden" id="epd_projectId">
-						<div class="form-group">
+						<div class="form-group form-group-lg">
 							<label for="epd_name" class="control-label">Název:</label>
-							<input type="text" class="form-control" id="epd_name">
+							<input type="text" class="form-control" name="name" id="epd_name">
 						</div>
-						<div class="form-group">
+						<div class="form-group form-group-sm">
 							<label for="epd_description" class="control-label">Popis:</label>
-							<textarea class="form-control" id="epd_description"></textarea>
+							<textarea class="form-control" name="description" id="epd_description"></textarea>
 						</div>
-						<div class="form-group">
+						<div class="form-group form-group-sm">
 							<label for="epd_created" class="control-label">Vytvořen:</label>
 							<input type="datetime" class="form-control" id="epd_created" disabled>
 						</div>
@@ -218,7 +242,7 @@
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">Zavřít</button>
-					<button type="button" class="btn btn-primary">Uložit</button>
+					<button type="button" class="btn btn-primary" disabled>Uložit</button>
 				</div>
 			</div>
 		</div>

@@ -127,6 +127,7 @@ function loadActivities() {
 	$.getJSON('/ListActivities', function(data) {
 		var items = [];
 		$.each(data, function(key, v) {
+			// XXX Value of `Project.Name` should be given directly with the JSON.
 			var project = gProjects[v.ProjectId];
 			var projectName = project.Name;
 			var cls = (v.Stopped == '') ? ' class="active"' : '';
@@ -143,6 +144,7 @@ function loadActivities() {
 					'<div class="btn-group" role="group" aria-label="...">' +
 						'<button class="btn btn-danger btn-xs" data-toggle="modal" ' +
 						        'data-target="#RemoveActivityDlg" ' +
+						        'data-activityId="' + v.ActivityId + '" ' +
 						        'data-projectId="' + v.ProjectId + '" ' +
 						        'data-projectName="' + projectName + '" ' +
 						        'data-name="' + v.Name + '" ' +
@@ -155,6 +157,7 @@ function loadActivities() {
 						'</button>' +
 						'<button class="btn btn-primary btn-xs" data-toggle="modal" ' +
 						        'data-target="#EditActivityDlg" ' +
+						        'data-activityId="' + v.ActivityId + '" ' +
 						        'data-projectId="' + v.ProjectId + '" ' +
 						        'data-projectName="' + projectName + '" ' +
 						        'data-name="' + v.Name + '" ' +
@@ -166,7 +169,7 @@ function loadActivities() {
 							'<span class="glyphicon glyphicon-pencil"></span>' +
 						'</button>' +
 						'<button class="btn btn-info btn-xs repeat-activity-dlg" ' +
-						        'data-toggle="modal" ' +
+						        'data-activityId="' + v.ActivityId + '" ' +
 						        'data-projectId="' + v.ProjectId + '" ' +
 						        'data-projectName="' + projectName + '" ' +
 						        'data-name="' + v.Name + '" ' +
@@ -175,7 +178,11 @@ function loadActivities() {
 						        'data-started="' + v.Started + '" ' +
 						        'data-stopped="' + v.Stopped + '" ' +
 						        'title="Repeat activity" ' +
-						        'onclick="repeatActivity(event);">' +
+								(
+									v.Stopped == ''
+										? 'disabled'
+										: 'onclick="repeatActivity(event)"'
+								) + '>' +
 							'<span class="glyphicon glyphicon-repeat"></span>' +
 						'</button>' +
 					'</div>' +
@@ -212,6 +219,9 @@ function loadProjects() {
 						'<button class="btn btn-danger btn-xs" data-toggle="modal" ' +
 						        'data-target="#RemoveProjectDlg" ' +
 						        'data-projectId="' + v.ProjectId + '" ' +
+						        'data-name="' + v.Name + '" ' +
+						        'data-description="' + v.Description + '" ' +
+						        'data-created="' + v.Created + '" ' +
 						        'title="Remove project">' +
 							'<span class="glyphicon glyphicon-remove-circle"></span>' +
 						'</button> ' +
@@ -233,32 +243,97 @@ function loadProjects() {
 } // end loadProjects()
 
 /**
+ * Helper function that returns activity from the given button.
+ *
+ * @param {DOMElement} btn
+ * @returns {Object}
+ */
+function retrieveActivityFromTableActionButton(btn) {
+	return {
+		ActivityId: btn.attr('data-activityId'),
+		ProjectId: btn.attr('data-projectId'),
+	    ProjectName: btn.attr('data-projectName'),
+		Name: btn.attr('data-name'),
+		Description: btn.attr('data-description'),
+		Tags: btn.attr('data-tags'),
+		Started: btn.attr('data-started'),
+		Stopped: btn.attr('data-stopped')
+	};
+} // end retrieveActivityFromTableActionButton(btn)
+
+/**
+ * Helper function that returns project from the given button.
+ *
+ * @param {DOMElement} btn
+ * @returns {Object}
+ */
+function retrieveProjectFromTableActionButton(btn) {
+	return {
+		ProjectId: btn.attr('data-projectId'),
+		Name: btn.attr('data-name'),
+		Description: btn.attr('data-description'),
+		Created: btn.attr('data-created')
+	};
+} // end retrieveProjectFromTableActionButton(btn)
+
+/**
  * Repeat activity.
  *
  * @param {DOMEvent} event
  * @returns {void}
  */
 function repeatActivity(event) {
-	var button = $(event.target) // Button that triggered the modal
-	var projectId = button.attr('data-projectId');
-	var projectName = button.attr('data-projectName');
-	var name = button.attr('data-name');
-	var desc = button.attr('data-description');
-	var tags = button.attr('data-tags');
+	var activity = retrieveActivityFromTableActionButton($(event.target));
+	console.log(activity);
 
-	//$('#projectIdInput').val(name);
-	$('#activityInput').val(name);
-	$('#projectInput').val(projectName);
-	$('#tagsInput').val(tags);
-	$('#descriptionInput').val(desc);
-	$('#startActivityJumbotron').show();
-	$('#stopActivityJumbotron').hide();
+	// Check if there is a running activity
+	$.getJSON('/GetRunningActivity', function (data) {
+		if (data.ActivityId <= 0) {
+			repeatActivityInner(activity);
+			return;
+		}
 
-	$('#tabBtn1 a').tab('show');
+		// There is a running activity - ask user if really wants to continue...
+		var confirmMsg = "There is running activity '" + data.Name + "'.\n" +
+				"Do you want to stop it and start the new one?";
+		if (!window.confirm(confirmMsg)) {
+			return;
+		}
+
+		// Stop activity
+		$.post('/StopActivity', {}, function (response) {
+			// TODO We should also check response/request ID!!!
+			if (response['Error'] === 'undefined') {
+				alert('Activity was not stopped. Can not start new activity!');
+				return;
+			}
+
+			repeatActivityInner(activity);
+		});
+	});
 } // end repeatActivity(event)
 
 /**
+ * Repeat activity (fill start activity form with given data and
+ * show the first tab).
+ *
+ * @param {Object} activity
+ * @returns {void}
+ */
+function repeatActivityInner(activity) {
+	$('#activityInput').val(activity.Name);
+	$('#projectInput').val(activity.ProjectName);
+	$('#tagsInput').val(activity.Tags);
+	$('#descriptionInput').val(activity.Description);
+	$('#startActivityJumbotron').show();
+	$('#stopActivityJumbotron').hide();
+	$('#tabBtn1 a').tab('show');
+} // end repeatActivityInner(activity)
+
+/**
  * Initialize our application.
+ *
+ * @returns {void}
  */
 $(document).ready(function () {
 	// Firstly load all projects
@@ -329,46 +404,115 @@ $(document).ready(function () {
 		event.preventDefault();
 		$.post('/StopActivity', $(this).serialize(), function (response) {
 			// TODO We should also check response/request ID!!!
-			console.log(response);
+
 			if ('Error' in response) {
 				addMessage('error', response.Error.Message);
 			} else {
 				addMessage('success', response.Result.Message);
 			}
+
 			checkRunningActivity();
 		});
 	});
 
-	// Edit project dialog
-	$('#EditProjectDlg').on('show.bs.modal', function (event) {
-		console.log("XXX #RemoveProjectDlg");
-		var button = $(event.relatedTarget) // Button that triggered the modal
-		var projectId = button.attr('data-projectId');
-		var name = button.attr('data-name');
-		var desc = button.attr('data-description');
-		var created = button.attr('data-created');
+	// Dialog for activity editing
+	$('#EditActivityDlg').on('show.bs.modal', function (event) {
+		console.log("XXX #EditActivityDlg");
+		var activity = retrieveActivityFromTableActionButton($(event.relatedTarget));
+		console.log(activity);
 
-		console.log(projectId);
-		console.log(name);
-		console.log(desc);
-		console.log(created);
+		if ((typeof activity.ActivityId !== 'number' && (activity.ActivityId%1) !== 0)) {
+			return;
+		}
 
-		var modal = $(this);
-		modal.find('#epd_projectId').val(projectId);
-		modal.find('#epd_name').val(name);
-		modal.find('#epd_description').val(desc);
-		modal.find('#epd_created').val(created);
+		console.log('XXX Edit activity with ID ' + activity.ActivityId);
+		$('#ead_activityId').val(activity.ActivityId);
+		$('#ead_name').val(activity.Name);
+		$('#ead_project').val(activity.ProjectName);
+		$('#ead_tags').val(activity.Tags);
+		$('#ead_description').val(activity.Description);
+		$('#ead_started').val(activity.Started);
+		$('#ead_stopped').val(activity.Stopped);
+	});
+	$('#EditActivityDlg').on('hide.bs.modal', function (event) {
+		if (event.namespace == 'bs.modal' && event.type == 'hide') {
+			return;
+		}
+
+		console.log('XXX Save edited activity!');
+		console.log(event);
 	});
 
-	// Edit project dialog
+	// Dialog for activity removal
+	$('#RemoveActivityDlg').on('show.bs.modal', function (event) {
+		console.log("XXX #RemoveActivityDlg");
+		var activity = retrieveActivityFromTableActionButton($(event.relatedTarget));
+		console.log(activity);
+
+		if ((typeof activity.ActivityId !== 'number' && (activity.ActivityId%1) !== 0)) {
+			return;
+		}
+
+		console.log('XXX Remove activity with ID ' + activity.ActivityId);
+		$('#rad_ActivityId').html(activity.ActivityId);
+		$('#rad_ActivityName').html(activity.Name);
+
+		console.log($(this));
+	});
+	$('#RemoveActivityDlg').on('hide.bs.modal', function (event) {
+		if (event.namespace == 'bs.modal' && event.type == 'hide') {
+			return;
+		}
+
+		console.log('XXX Remove activity!');
+		console.log(event);
+	});
+
+	// Dialog for project editing
+	$('#EditProjectDlg').on('show.bs.modal', function (event) {
+		console.log("XXX #EditProjectDlg");
+		var project = retrieveProjectFromTableActionButton($(event.relatedTarget));//$(event.relatedTarget)
+		console.log(project);
+
+		var modal = $(this);
+		modal.find('#epd_projectId').val(project.ProjectId);
+		modal.find('#epd_name').val(project.Name);
+		modal.find('#epd_description').val(project.Description);
+		modal.find('#epd_created').val(project.Created);
+	});
+	$('#EditProjectDlg').on('hide.bs.modal', function (event) {
+		if (event.namespace == 'bs.modal' && event.type == 'hide') {
+			return;
+		}
+
+		console.log('XXX Save edited project!');
+		console.log(event);
+	});
+
+	// Dialog for project removal
 	$('#RemoveProjectDlg').on('show.bs.modal', function (event) {
 		console.log("XXX #RemoveProjectDlg");
-		var button = $(event.relatedTarget) // Button that triggered the modal
-		var projectId = button.attr('data-projectId');
+		var project = retrieveProjectFromTableActionButton($(event.relatedTarget));
+		console.log(project);
 
-		console.log(projectId);
+		if ((typeof project.ProjectId !== 'number' && (project.ProjectId%1) !== 0)) {
+			return;
+		}
 
-		// ...
+		// XXX Check if project has any activities!
+		// XXX If project has activities attached then offer either deleting those activities or moving them to another project!
+
+		console.log('XXX Remove project with ID ' + project.ProjectId);
+		$('#rpd_ProjectId').html(project.ProjectId);
+		$('#rpd_ProjectName').html(project.Name);
+	});
+	$('#RemoveProjectDlg').on('hide.bs.modal', function (event) {
+		if (event.namespace == 'bs.modal' && event.type == 'hide') {
+			return;
+		}
+
+		console.log('XXX Remove project!');
+		console.log(event);
 	});
 
 	// Check if there is a running activity

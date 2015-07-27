@@ -174,6 +174,10 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		projectsAutocomplete(w, r)
 	} else if r.URL.String() == "/CountOfProjectActivities" {
 		countOfProjectActivities(w, r)
+	} else if r.URL.String() == "/RemoveActivity" {
+		removeActivity(w, r)
+	} else if r.URL.String() == "/RemoveProject" {
+		removeProject(w, r)
 	} else {
 		mainPage(w, r)
 	}
@@ -337,6 +341,7 @@ func getRunningActivity(w http.ResponseWriter, r *http.Request) {
 }
 
 // Render JSON with activities.
+// TODO We need from and to for pagination!
 func listActivities(w http.ResponseWriter, r *http.Request) {
 	db, err := database.InitStorage(dbPath)
 	defer db.Close()
@@ -345,7 +350,7 @@ func listActivities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	activities, err := database.SelectActivities(db, -1)
+	activities, err := database.SelectActivities(db, 20)
 	checkError(err)
 
 	json, err := json.Marshal(activities)
@@ -409,6 +414,16 @@ func countOfProjectActivities(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(json)
+}
+
+// Remove activity.
+func removeActivity(w http.ResponseWriter, r *http.Request) {
+	outputJson(jsonrpc.NewErrorResponse(jsonrpc.NotImplementedError, "id-XXX"), w)
+}
+
+// Remove project.
+func removeProject(w http.ResponseWriter, r *http.Request) {
+	outputJson(jsonrpc.NewErrorResponse(jsonrpc.NotImplementedError, "id-XXX"), w)
 }
 
 // Render main HTML page.

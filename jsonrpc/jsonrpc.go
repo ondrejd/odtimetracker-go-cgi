@@ -78,6 +78,9 @@ var NewActivityError = &Error{Code: 32006, Message: "Inserting new activity fail
 // Our custom error: "Loading data from database failed".
 var LoadDataError = &Error{Code: 32007, Message: "Loading data from database failed"}
 
+// Our custom error: "Not implemented error".
+var NotImplementedError = &Error{Code: 32008, Message: "Not implemented yet!"}
+
 // Define simple JSON-RPC response.
 type Response struct {
 	JsonRpc string      // Contains version of JSON-RPC protocol. MUST be exactly "2.0.".
