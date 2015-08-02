@@ -8,6 +8,20 @@
 var gProjects = {};
 
 /**
+ * Holds helper variable that tell us that event scroll happened.
+ * @see http://ejohn.org/blog/learning-from-twitter/
+ * @var {Boolean}
+ */
+var gDidScroll = {};
+
+/**
+ * Holds position in the page where we want trigger event if user scroll to that point.
+ * @var {Number}
+ */
+var gScrollTopCheck = 9999999; // We add this value just for to be sure to prevent
+                               // triggering the event when something goes wrong.
+
+/**
  * Generate random string.
  *
  * @param {Integer} length
@@ -313,6 +327,28 @@ function repeatActivity(event) {
 	});
 } // end repeatActivity(event)
 
+
+
+/*
+var target = $(".mypara").offset().top,
+    timeout = null;
+
+$(window).scroll(function () {
+	if (!timeout) {
+		timeout = setTimeout(function () {
+			console.log('scroll');
+			clearTimeout(timeout);
+			timeout = null;
+			if ($(window).scrollTop() >= target) {
+				alert('made it');
+			}
+		}, 250);
+	}
+});
+*/
+
+
+
 /**
  * Repeat activity (fill start activity form with given data and
  * show the first tab).
@@ -515,6 +551,21 @@ $(document).ready(function () {
 		console.log(event);
 	});
 
+	// This is used for checking if we need to load more data for data tables
+	$(window).scroll(function (event) {
+		if ((window.innerHeight + window.scrollY) < document.body.scrollHeight - 150) {
+			return;
+		}
+
+		console.log('IS a bottom of the page - we should load next activities/projects');
+		// ...
+	});
+
 	// Check if there is a running activity
 	checkRunningActivity();
 });
+
+function offsetBottom(el, i) {
+	i = i || 0;
+	return $(el)[i].getBoundingClientRect().bottom;
+}
